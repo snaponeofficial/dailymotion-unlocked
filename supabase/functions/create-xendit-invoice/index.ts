@@ -25,7 +25,7 @@ serve(async (req) => {
     const successRedirectUrl =
       `${origin}/payment/success?external_id=${externalId}`;
 
-    const response = await fetch("https://api.xendit.co/v2/invoices", {
+    const response = await fetch("https://api.xendit.co/invoices", {
       method: "POST",
       headers: {
         Authorization: `Basic ${btoa(xenditKey + ":")}`,
