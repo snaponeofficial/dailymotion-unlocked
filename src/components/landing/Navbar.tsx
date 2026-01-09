@@ -1,12 +1,21 @@
 import { Button } from "@/components/ui/button";
-import { Play, Menu, X } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Play, Menu, X, LogOut, User } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
+import { signOut } from "@/lib/auth";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 export function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const { user, isAdmin } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    await signOut();
+    navigate("/");
+    setIsOpen(false);
+  };
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 glass-strong">
@@ -38,8 +47,13 @@ export function Navbar() {
 
           {/* Auth Buttons */}
           <div className="hidden md:flex items-center gap-3">
+            <ThemeToggle />
             {user ? (
               <>
+                <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-secondary/50">
+                  <User className="w-4 h-4 text-muted-foreground" />
+                  <span className="text-sm text-muted-foreground max-w-32 truncate">{user.email}</span>
+                </div>
                 {isAdmin && (
                   <Link to="/admin">
                     <Button variant="ghost" size="sm">Admin</Button>
@@ -48,6 +62,9 @@ export function Navbar() {
                 <Link to="/watch">
                   <Button variant="hero" size="sm">Watch Now</Button>
                 </Link>
+                <Button variant="ghost" size="icon" onClick={handleLogout}>
+                  <LogOut className="w-4 h-4" />
+                </Button>
               </>
             ) : (
               <>
@@ -90,21 +107,29 @@ export function Navbar() {
             <div className="pt-4 border-t border-border/50 space-y-3">
               {user ? (
                 <>
+                  <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-secondary/50">
+                    <User className="w-4 h-4 text-muted-foreground" />
+                    <span className="text-sm text-muted-foreground truncate">{user.email}</span>
+                  </div>
                   {isAdmin && (
-                    <Link to="/admin">
+                    <Link to="/admin" onClick={() => setIsOpen(false)}>
                       <Button variant="ghost" className="w-full">Admin</Button>
                     </Link>
                   )}
-                  <Link to="/watch">
+                  <Link to="/watch" onClick={() => setIsOpen(false)}>
                     <Button variant="hero" className="w-full">Watch Now</Button>
                   </Link>
+                  <Button variant="outline" className="w-full" onClick={handleLogout}>
+                    <LogOut className="w-4 h-4 mr-2" />
+                    Logout
+                  </Button>
                 </>
               ) : (
                 <>
-                  <Link to="/login">
+                  <Link to="/login" onClick={() => setIsOpen(false)}>
                     <Button variant="ghost" className="w-full">Login</Button>
                   </Link>
-                  <Link to="/register">
+                  <Link to="/register" onClick={() => setIsOpen(false)}>
                     <Button variant="hero" className="w-full">Get Started</Button>
                   </Link>
                 </>
