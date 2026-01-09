@@ -3,12 +3,13 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Play, Users, CreditCard, Eye, LogOut, Search, Settings, Receipt } from "lucide-react";
+import { Play, Users, CreditCard, Eye, LogOut, Search, Settings, Receipt, Palette } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { signOut } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { AdminSettings } from "@/components/admin/AdminSettings";
 import { PaymentLogs } from "@/components/admin/PaymentLogs";
+import { BrandingSettings } from "@/components/admin/BrandingSettings";
 
 export default function Admin() {
   const { user, isAdmin, loading } = useAuth();
@@ -126,18 +127,22 @@ export default function Admin() {
 
         {/* Tabs */}
         <Tabs defaultValue="users" className="space-y-6">
-          <TabsList className="glass">
-            <TabsTrigger value="users" className="gap-2">
+          <TabsList className="glass flex-wrap h-auto gap-1 p-1">
+            <TabsTrigger value="users" className="gap-2 text-xs sm:text-sm">
               <Users className="w-4 h-4" />
-              Users
+              <span className="hidden sm:inline">Users</span>
             </TabsTrigger>
-            <TabsTrigger value="payments" className="gap-2">
+            <TabsTrigger value="payments" className="gap-2 text-xs sm:text-sm">
               <Receipt className="w-4 h-4" />
-              Payment Logs
+              <span className="hidden sm:inline">Payments</span>
             </TabsTrigger>
-            <TabsTrigger value="settings" className="gap-2">
+            <TabsTrigger value="branding" className="gap-2 text-xs sm:text-sm">
+              <Palette className="w-4 h-4" />
+              <span className="hidden sm:inline">Branding</span>
+            </TabsTrigger>
+            <TabsTrigger value="settings" className="gap-2 text-xs sm:text-sm">
               <Settings className="w-4 h-4" />
-              Settings
+              <span className="hidden sm:inline">Settings</span>
             </TabsTrigger>
           </TabsList>
 
@@ -196,6 +201,10 @@ export default function Admin() {
 
           <TabsContent value="payments">
             <PaymentLogs />
+          </TabsContent>
+
+          <TabsContent value="branding">
+            <BrandingSettings />
           </TabsContent>
 
           <TabsContent value="settings">

@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Play, ArrowLeft, Loader2, Check, Shield, CreditCard } from "lucide-react";
+import { Play, ArrowLeft, Loader2, Check, Shield, CreditCard, Home } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -41,7 +41,6 @@ export default function Payment() {
       if (error) throw error;
 
       if (data?.invoice_url) {
-        // Redirect to Xendit payment page
         window.location.href = data.invoice_url;
       } else {
         throw new Error("No invoice URL received");
@@ -59,64 +58,73 @@ export default function Payment() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-hero flex items-center justify-center px-6 py-24">
+    <div className="min-h-screen bg-gradient-hero flex items-center justify-center px-4 sm:px-6 py-12 sm:py-24">
       {/* Background effects */}
       <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute top-1/3 left-1/4 w-96 h-96 bg-primary/10 rounded-full blur-[120px]" />
-        <div className="absolute bottom-1/3 right-1/4 w-96 h-96 bg-accent/10 rounded-full blur-[120px]" />
+        <div className="absolute top-1/3 left-1/4 w-64 sm:w-96 h-64 sm:h-96 bg-primary/10 rounded-full blur-[120px]" />
+        <div className="absolute bottom-1/3 right-1/4 w-64 sm:w-96 h-64 sm:h-96 bg-accent/10 rounded-full blur-[120px]" />
       </div>
 
       <div className="relative z-10 w-full max-w-md">
-        <button
-          onClick={() => navigate(-1)}
-          className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-8"
+        {/* Back to home - always visible */}
+        <Link
+          to="/"
+          className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-6 sm:mb-8"
         >
-          <ArrowLeft className="w-4 h-4" />
-          Go back
-        </button>
+          <Home className="w-4 h-4" />
+          Back to home
+        </Link>
 
-        <div className="glass-strong rounded-2xl p-8">
+        <div className="glass-strong rounded-2xl p-6 sm:p-8">
           {/* Logo */}
-          <div className="flex items-center gap-2 mb-8">
-            <div className="w-10 h-10 rounded-lg bg-gradient-primary flex items-center justify-center">
-              <Play className="w-5 h-5 text-primary-foreground" />
+          <div className="flex items-center gap-2 mb-6 sm:mb-8">
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-gradient-primary flex items-center justify-center">
+              <Play className="w-4 h-4 sm:w-5 sm:h-5 text-primary-foreground" />
             </div>
-            <span className="font-display font-bold text-xl">DailyWatch</span>
+            <span className="font-display font-bold text-lg sm:text-xl">DailyWatch</span>
           </div>
 
-          <h1 className="font-display text-2xl font-bold mb-2">Complete Your Purchase</h1>
-          <p className="text-muted-foreground mb-8">One-time payment for lifetime access</p>
+          <h1 className="font-display text-xl sm:text-2xl font-bold mb-2">Complete Your Purchase</h1>
+          <p className="text-muted-foreground text-sm sm:text-base mb-6 sm:mb-8">One-time payment for lifetime access</p>
+
+          {/* User info */}
+          {user && (
+            <div className="flex items-center gap-2 p-3 rounded-lg bg-secondary/30 mb-4 sm:mb-6">
+              <span className="text-sm text-muted-foreground">Logged in as:</span>
+              <span className="text-sm font-medium truncate">{user.email}</span>
+            </div>
+          )}
 
           {/* Price card */}
-          <div className="bg-secondary/50 rounded-xl p-6 mb-8">
+          <div className="bg-secondary/50 rounded-xl p-4 sm:p-6 mb-6 sm:mb-8">
             <div className="flex items-center justify-between mb-4">
-              <span className="text-muted-foreground">Lifetime Access</span>
-              <span className="font-display text-3xl font-bold text-gradient">₱49</span>
+              <span className="text-muted-foreground text-sm sm:text-base">Lifetime Access</span>
+              <span className="font-display text-2xl sm:text-3xl font-bold text-gradient">₱49</span>
             </div>
-            <ul className="space-y-3">
-              <li className="flex items-center gap-2 text-sm">
-                <Check className="w-4 h-4 text-primary" />
+            <ul className="space-y-2 sm:space-y-3">
+              <li className="flex items-center gap-2 text-xs sm:text-sm">
+                <Check className="w-4 h-4 text-primary shrink-0" />
                 Unlimited ad-free videos
               </li>
-              <li className="flex items-center gap-2 text-sm">
-                <Check className="w-4 h-4 text-primary" />
-                Fullscreen support
+              <li className="flex items-center gap-2 text-xs sm:text-sm">
+                <Check className="w-4 h-4 text-primary shrink-0" />
+                Fullscreen & TV mode support
               </li>
-              <li className="flex items-center gap-2 text-sm">
-                <Check className="w-4 h-4 text-primary" />
+              <li className="flex items-center gap-2 text-xs sm:text-sm">
+                <Check className="w-4 h-4 text-primary shrink-0" />
                 Works on all devices
               </li>
-              <li className="flex items-center gap-2 text-sm">
-                <Check className="w-4 h-4 text-primary" />
-                No subscription needed
+              <li className="flex items-center gap-2 text-xs sm:text-sm">
+                <Check className="w-4 h-4 text-primary shrink-0" />
+                Video search & watchlist
               </li>
             </ul>
           </div>
 
           {/* Payment method info */}
-          <div className="flex items-center gap-3 p-4 rounded-lg bg-primary/10 border border-primary/20 mb-6">
-            <CreditCard className="w-5 h-5 text-primary" />
-            <div className="text-sm">
+          <div className="flex items-center gap-3 p-3 sm:p-4 rounded-lg bg-primary/10 border border-primary/20 mb-4 sm:mb-6">
+            <CreditCard className="w-5 h-5 text-primary shrink-0" />
+            <div className="text-xs sm:text-sm">
               <p className="font-medium">Secure payment via Xendit</p>
               <p className="text-muted-foreground">GCash, Maya, Cards accepted</p>
             </div>
@@ -125,18 +133,18 @@ export default function Payment() {
           <Button
             variant="hero"
             size="xl"
-            className="w-full"
+            className="w-full text-sm sm:text-base"
             onClick={handlePayment}
             disabled={loading}
           >
             {loading ? (
               <>
-                <Loader2 className="w-5 h-5 animate-spin" />
+                <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" />
                 Processing...
               </>
             ) : (
               <>
-                <Shield className="w-5 h-5" />
+                <Shield className="w-4 h-4 sm:w-5 sm:h-5" />
                 Pay ₱49 Now
               </>
             )}
