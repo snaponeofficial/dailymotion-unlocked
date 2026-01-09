@@ -257,25 +257,67 @@ export type Database = {
         }
         Relationships: []
       }
+      user_watchlist: {
+        Row: {
+          added_at: string
+          id: string
+          thumbnail_url: string | null
+          title: string | null
+          user_id: string
+          video_id: string | null
+          video_url: string
+          watched: boolean | null
+        }
+        Insert: {
+          added_at?: string
+          id?: string
+          thumbnail_url?: string | null
+          title?: string | null
+          user_id: string
+          video_id?: string | null
+          video_url: string
+          watched?: boolean | null
+        }
+        Update: {
+          added_at?: string
+          id?: string
+          thumbnail_url?: string | null
+          title?: string | null
+          user_id?: string
+          video_id?: string | null
+          video_url?: string
+          watched?: boolean | null
+        }
+        Relationships: []
+      }
       video_views: {
         Row: {
           id: string
           session_id: string | null
+          thumbnail_url: string | null
           user_id: string | null
+          video_id: string | null
+          video_title: string | null
           video_url: string
           watched_at: string
         }
         Insert: {
           id?: string
           session_id?: string | null
+          thumbnail_url?: string | null
           user_id?: string | null
+          video_id?: string | null
+          video_title?: string | null
           video_url: string
           watched_at?: string
         }
         Update: {
           id?: string
           session_id?: string | null
+          thumbnail_url?: string | null
           user_id?: string | null
+          video_id?: string | null
+          video_title?: string | null
           video_url?: string
           watched_at?: string
         }
