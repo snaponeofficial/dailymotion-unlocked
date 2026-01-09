@@ -6,20 +6,17 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
-  if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
-  }
+  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
     const { userId, email, amount, description } = await req.json();
 
-const xenditKey = "xnd_production_77BNek4CU27qGVzWr8CuCMR9ebZKi0wav6TCmBBkgTTYtCOZ0BUMMVk9IIRZo";
-    if (!xenditKey) {
-      throw new Error("Xendit API key not configured");
-    }
+    // Hardcode your key for testing
+    const xenditKey = "xnd_production_77BNek4CU27qGVzWr8CuCMR9ebZKi0wav6TCmBBkgTTYtCOZ0BUMMVk9IIRZo";
 
-    const externalId = `dailywatch_${userId}_${Date.now()}`;
-    const successRedirectUrl = `${req.headers.get("origin")}/payment/success?external_id=${externalId}`;
+    const externalId = `dailywatch_${userId || "test"}_${Date.now()}`;
+    const origin = req.headers.get("origin") || "http://localhost:5000";
+    const successRedirectUrl = `${origin}/payment/success?external_id=${externalId}`;
 
     const response = await fetch("https://api.xendit.co/v2/invoices", {
       method: "POST",
@@ -29,31 +26,29 @@ const xenditKey = "xnd_production_77BNek4CU27qGVzWr8CuCMR9ebZKi0wav6TCmBBkgTTYtC
       },
       body: JSON.stringify({
         external_id: externalId,
-        amount: amount,
+        amount: amount || 1,
         currency: "PHP",
-        description: description,
-        payer_email: email,
+        description: description || "Test Payment",
+        payer_email: email || "test@example.com",
         success_redirect_url: successRedirectUrl,
-        failure_redirect_url: `${req.headers.get("origin")}/payment`,
+        failure_redirect_url: `${origin}/payment`,
         invoice_duration: 86400,
       }),
     });
 
     const data = await response.json();
+    console.log("Xendit response:", data);
 
-    if (!response.ok) {
-      console.error("Xendit error:", data);
-      throw new Error(data.message || "Failed to create invoice");
-    }
-
+    // Always return 200 for debugging
     return new Response(JSON.stringify(data), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
-  } catch (error) {
-    console.error("Error:", error);
+  } catch (error: unknown) {
+    console.error("Server error:", error);
+    const message = error instanceof Error ? error.message : String(error);
     return new Response(
-      JSON.stringify({ error: error.message }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      JSON.stringify({ error: message }),
+      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
 });
