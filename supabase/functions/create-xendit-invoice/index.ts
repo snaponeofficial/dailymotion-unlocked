@@ -68,4 +68,5 @@ serve(async (req) => {
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
-}, { port: PORT });
+}, { port: PORT, hostname: "0.0.0.0" }); // <-- bind to all network interfaces
+
