@@ -25,6 +25,7 @@ serve(async (req) => {
     const successRedirectUrl =
       `${origin}/payment/success?external_id=${externalId}`;
 
+    // ✅ CHANGE: Use free non-v2 endpoint
     const response = await fetch("https://api.xendit.co/invoices", {
       method: "POST",
       headers: {
@@ -39,7 +40,7 @@ serve(async (req) => {
         payer_email: email,
         success_redirect_url: successRedirectUrl,
         failure_redirect_url: `${origin}/payment`,
-        invoice_duration: 86400,
+        // optional for free API: remove invoice_duration if it causes issues
       }),
     });
 
@@ -50,6 +51,7 @@ serve(async (req) => {
       throw new Error(data?.message ?? "Failed to create invoice");
     }
 
+    // ✅ KEEP: Same response structure
     return new Response(JSON.stringify(data), {
       headers: {
         ...corsHeaders,
