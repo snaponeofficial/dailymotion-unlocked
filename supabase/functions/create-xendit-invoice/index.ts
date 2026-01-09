@@ -2,8 +2,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
 serve(async (req) => {
@@ -20,27 +19,23 @@ serve(async (req) => {
     }
 
     const externalId = `dailywatch_${userId}_${Date.now()}`;
-    const origin = req.headers.get("origin") ?? "";
+    const successRedirectUrl = `${req.headers.get("origin")}/payment/success?external_id=${externalId}`;
 
-    const successRedirectUrl =
-      `${origin}/payment/success?external_id=${externalId}`;
-
-    // ✅ CHANGE: Use free non-v2 endpoint
-    const response = await fetch("https://api.xendit.co/invoices", {
+    const response = await fetch("https://api.xendit.co/v2/invoices", {
       method: "POST",
       headers: {
-        Authorization: `Basic ${btoa(xenditKey + ":")}`,
+        "Authorization": `Basic ${btoa(xenditKey + ":")}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
         external_id: externalId,
-        amount,
+        amount: amount,
         currency: "PHP",
-        description,
+        description: description,
         payer_email: email,
         success_redirect_url: successRedirectUrl,
-        failure_redirect_url: `${origin}/payment`,
-        // optional for free API: remove invoice_duration if it causes issues
+        failure_redirect_url: `${req.headers.get("origin")}/payment`,
+        invoice_duration: 86400,
       }),
     });
 
@@ -48,31 +43,17 @@ serve(async (req) => {
 
     if (!response.ok) {
       console.error("Xendit error:", data);
-      throw new Error(data?.message ?? "Failed to create invoice");
+      throw new Error(data.message || "Failed to create invoice");
     }
 
-    // ✅ KEEP: Same response structure
     return new Response(JSON.stringify(data), {
-      headers: {
-        ...corsHeaders,
-        "Content-Type": "application/json",
-      },
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
-  } catch (error: unknown) {
-    const message =
-      error instanceof Error ? error.message : "Unknown error occurred";
-
+  } catch (error) {
     console.error("Error:", error);
-
     return new Response(
-      JSON.stringify({ error: message }),
-      {
-        status: 500,
-        headers: {
-          ...corsHeaders,
-          "Content-Type": "application/json",
-        },
-      }
+      JSON.stringify({ error: error.message }),
+      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
 });
