@@ -1,35 +1,51 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
+// CORS headers
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+// Helper: Base64 for Xendit auth
 function toBase64(str: string) {
   return Buffer.from(str, "utf-8").toString("base64");
 }
 
+// Start the Edge Function
 serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+  if (req.method === "OPTIONS") {
+    return new Response(null, { headers: corsHeaders });
+  }
 
   try {
-    const body = await req.json().catch(() => ({}));
+    // Parse JSON safely
+    let body: any;
+    try {
+      body = await req.json();
+    } catch {
+      body = {};
+    }
+
     const { userId, email, amount, description } = body;
 
+    // Validate required fields
     if (!userId || !email || !amount || !description) {
-      console.error("Missing fields", body);
+      console.error("Missing required fields:", body);
       return new Response(
-        JSON.stringify({ error: "Missing required fields" }),
+        JSON.stringify({ error: "Missing required fields: userId, email, amount, description" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
+    // Xendit key
     const xenditKey = "xnd_production_77BNek4CU27qGVzWr8CuCMR9ebZKi0wav6TCmBBkgTTYtCOZ0BUMMVk9IIRZo";
+
     const externalId = `dailywatch_${userId}_${Date.now()}`;
-    const origin = req.headers.get("origin") || "";
+    const origin = req.headers.get("origin") || ""; // fallback to empty string
     const successRedirectUrl = `${origin}/payment/success?external_id=${externalId}`;
     const failureRedirectUrl = `${origin}/payment`;
 
+    // Call Xendit API
     const response = await fetch("https://api.xendit.co/v2/invoices", {
       method: "POST",
       headers: {
@@ -51,19 +67,21 @@ serve(async (req) => {
     const data = await response.json();
 
     if (!response.ok) {
-      console.error("Xendit returned error", data);
+      console.error("Xendit returned error:", data);
       return new Response(
-        JSON.stringify({ error: data.message || "Xendit error" }),
+        JSON.stringify({ error: data.message || "Xendit API error" }),
         { status: response.status, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
+    // Success response
     return new Response(JSON.stringify(data), {
+      status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : "Unknown error";
-    console.error("Function error:", message);
+    const message = err instanceof Error ? err.message : "Unknown server error";
+    console.error("Edge Function crashed:", message);
     return new Response(
       JSON.stringify({ error: message }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
