@@ -1,36 +1,30 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
-// --- CORS headers ---
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-// --- Helper for Base64 auth ---
 function toBase64(str: string) {
   return Buffer.from(str, "utf-8").toString("base64");
 }
 
-// --- Start server ---
 serve(async (req) => {
-  if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
-  }
+  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const body = await req.json();
+    const body = await req.json().catch(() => ({}));
     const { userId, email, amount, description } = body;
 
     if (!userId || !email || !amount || !description) {
+      console.error("Missing fields", body);
       return new Response(
         JSON.stringify({ error: "Missing required fields" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    // ✅ Your Xendit key
     const xenditKey = "xnd_production_77BNek4CU27qGVzWr8CuCMR9ebZKi0wav6TCmBBkgTTYtCOZ0BUMMVk9IIRZo";
-
     const externalId = `dailywatch_${userId}_${Date.now()}`;
     const origin = req.headers.get("origin") || "";
     const successRedirectUrl = `${origin}/payment/success?external_id=${externalId}`;
@@ -57,9 +51,9 @@ serve(async (req) => {
     const data = await response.json();
 
     if (!response.ok) {
-      console.error("Xendit error:", data);
+      console.error("Xendit returned error", data);
       return new Response(
-        JSON.stringify({ error: data.message || "Failed to create invoice" }),
+        JSON.stringify({ error: data.message || "Xendit error" }),
         { status: response.status, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -69,7 +63,7 @@ serve(async (req) => {
     });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Unknown error";
-    console.error("Server error:", message);
+    console.error("Function error:", message);
     return new Response(
       JSON.stringify({ error: message }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
