@@ -41,6 +41,78 @@ export type Database = {
         }
         Relationships: []
       }
+      admin_settings: {
+        Row: {
+          created_at: string
+          encrypted: boolean | null
+          id: string
+          key: string
+          updated_at: string
+          value: string
+        }
+        Insert: {
+          created_at?: string
+          encrypted?: boolean | null
+          id?: string
+          key: string
+          updated_at?: string
+          value: string
+        }
+        Update: {
+          created_at?: string
+          encrypted?: boolean | null
+          id?: string
+          key?: string
+          updated_at?: string
+          value?: string
+        }
+        Relationships: []
+      }
+      payment_logs: {
+        Row: {
+          amount: number
+          created_at: string
+          currency: string | null
+          external_id: string
+          id: string
+          invoice_url: string | null
+          ip_address: string | null
+          payment_method: string | null
+          status: string
+          user_email: string | null
+          user_id: string | null
+          xendit_response: Json | null
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          currency?: string | null
+          external_id: string
+          id?: string
+          invoice_url?: string | null
+          ip_address?: string | null
+          payment_method?: string | null
+          status: string
+          user_email?: string | null
+          user_id?: string | null
+          xendit_response?: Json | null
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          currency?: string | null
+          external_id?: string
+          id?: string
+          invoice_url?: string | null
+          ip_address?: string | null
+          payment_method?: string | null
+          status?: string
+          user_email?: string | null
+          user_id?: string | null
+          xendit_response?: Json | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
@@ -105,26 +177,65 @@ export type Database = {
         Row: {
           created_at: string
           expires_at: string
+          fingerprint: string | null
           id: string
+          ip_address: string | null
+          is_blocked: boolean | null
           session_id: string
           started_at: string
+          user_agent: string | null
           video_count: number | null
         }
         Insert: {
           created_at?: string
           expires_at?: string
+          fingerprint?: string | null
           id?: string
+          ip_address?: string | null
+          is_blocked?: boolean | null
           session_id: string
           started_at?: string
+          user_agent?: string | null
           video_count?: number | null
         }
         Update: {
           created_at?: string
           expires_at?: string
+          fingerprint?: string | null
           id?: string
+          ip_address?: string | null
+          is_blocked?: boolean | null
           session_id?: string
           started_at?: string
+          user_agent?: string | null
           video_count?: number | null
+        }
+        Relationships: []
+      }
+      user_favorites: {
+        Row: {
+          created_at: string
+          id: string
+          thumbnail_url: string | null
+          user_id: string
+          video_title: string | null
+          video_url: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          thumbnail_url?: string | null
+          user_id: string
+          video_title?: string | null
+          video_url: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          thumbnail_url?: string | null
+          user_id?: string
+          video_title?: string | null
+          video_url?: string
         }
         Relationships: []
       }

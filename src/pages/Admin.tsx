@@ -2,10 +2,13 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Play, Users, CreditCard, Eye, LogOut, Search } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Play, Users, CreditCard, Eye, LogOut, Search, Settings, Receipt } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { signOut } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
+import { AdminSettings } from "@/components/admin/AdminSettings";
+import { PaymentLogs } from "@/components/admin/PaymentLogs";
 
 export default function Admin() {
   const { user, isAdmin, loading } = useAuth();
@@ -121,57 +124,84 @@ export default function Admin() {
           </div>
         </div>
 
-        {/* Users table */}
-        <div className="glass rounded-xl p-6">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="font-display text-xl font-semibold">Users</h2>
-            <div className="relative w-64">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input
-                placeholder="Search by email..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 bg-secondary/50"
-              />
+        {/* Tabs */}
+        <Tabs defaultValue="users" className="space-y-6">
+          <TabsList className="glass">
+            <TabsTrigger value="users" className="gap-2">
+              <Users className="w-4 h-4" />
+              Users
+            </TabsTrigger>
+            <TabsTrigger value="payments" className="gap-2">
+              <Receipt className="w-4 h-4" />
+              Payment Logs
+            </TabsTrigger>
+            <TabsTrigger value="settings" className="gap-2">
+              <Settings className="w-4 h-4" />
+              Settings
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="users">
+            <div className="glass rounded-xl p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="font-display text-xl font-semibold">Users</h2>
+                <div className="relative w-64">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search by email..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-10 bg-secondary/50"
+                  />
+                </div>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b border-border/50">
+                      <th className="text-left py-3 px-4 text-muted-foreground font-medium">Email</th>
+                      <th className="text-left py-3 px-4 text-muted-foreground font-medium">Joined</th>
+                      <th className="text-left py-3 px-4 text-muted-foreground font-medium">Status</th>
+                      <th className="text-left py-3 px-4 text-muted-foreground font-medium">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredUsers.map((u) => (
+                      <tr key={u.id} className="border-b border-border/30">
+                        <td className="py-3 px-4">{u.email}</td>
+                        <td className="py-3 px-4 text-muted-foreground">
+                          {new Date(u.created_at).toLocaleDateString()}
+                        </td>
+                        <td className="py-3 px-4">
+                          <span className={`px-2 py-1 rounded-full text-xs ${u.subscription?.status === "active" ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground"}`}>
+                            {u.subscription?.status || "inactive"}
+                          </span>
+                        </td>
+                        <td className="py-3 px-4">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => toggleSubscription(u.id, u.subscription?.status)}
+                          >
+                            {u.subscription?.status === "active" ? "Deactivate" : "Activate"}
+                          </Button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
-          </div>
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-border/50">
-                  <th className="text-left py-3 px-4 text-muted-foreground font-medium">Email</th>
-                  <th className="text-left py-3 px-4 text-muted-foreground font-medium">Joined</th>
-                  <th className="text-left py-3 px-4 text-muted-foreground font-medium">Status</th>
-                  <th className="text-left py-3 px-4 text-muted-foreground font-medium">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredUsers.map((u) => (
-                  <tr key={u.id} className="border-b border-border/30">
-                    <td className="py-3 px-4">{u.email}</td>
-                    <td className="py-3 px-4 text-muted-foreground">
-                      {new Date(u.created_at).toLocaleDateString()}
-                    </td>
-                    <td className="py-3 px-4">
-                      <span className={`px-2 py-1 rounded-full text-xs ${u.subscription?.status === "active" ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground"}`}>
-                        {u.subscription?.status || "inactive"}
-                      </span>
-                    </td>
-                    <td className="py-3 px-4">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => toggleSubscription(u.id, u.subscription?.status)}
-                      >
-                        {u.subscription?.status === "active" ? "Deactivate" : "Activate"}
-                      </Button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
+          </TabsContent>
+
+          <TabsContent value="payments">
+            <PaymentLogs />
+          </TabsContent>
+
+          <TabsContent value="settings">
+            <AdminSettings />
+          </TabsContent>
+        </Tabs>
       </main>
     </div>
   );

@@ -8,6 +8,9 @@ import { useAuth } from "@/hooks/useAuth";
 import { signOut } from "@/lib/auth";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { VideoHistory } from "@/components/VideoHistory";
+import { VideoFavorites } from "@/components/VideoFavorites";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 export default function Watch() {
   const [videoUrl, setVideoUrl] = useState("");
@@ -47,13 +50,20 @@ export default function Watch() {
     if (video) {
       setEmbedUrl(video.embedUrl);
       
-      // Log video view
       if (user) {
         await supabase.from("video_views").insert({
           user_id: user.id,
           video_url: videoUrl,
         });
       }
+    }
+  };
+
+  const handleSelectVideo = (url: string) => {
+    setVideoUrl(url);
+    const video = parseVideoUrl(url);
+    if (video) {
+      setEmbedUrl(video.embedUrl);
     }
   };
 
@@ -83,7 +93,6 @@ export default function Watch() {
 
   return (
     <div className="min-h-screen bg-gradient-hero">
-      {/* Header */}
       <header className="glass-strong border-b border-border/50">
         <div className="container mx-auto px-6 h-16 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2">
@@ -93,18 +102,20 @@ export default function Watch() {
             <span className="font-display font-bold text-lg">DailyWatch</span>
           </Link>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
+            <VideoHistory onSelectVideo={handleSelectVideo} />
+            <VideoFavorites onSelectVideo={handleSelectVideo} currentVideoUrl={videoUrl} />
+            <ThemeToggle />
             {isAdmin && (
               <Link to="/admin">
                 <Button variant="ghost" size="sm">
                   <Crown className="w-4 h-4" />
-                  Admin
                 </Button>
               </Link>
             )}
             <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-secondary/50">
               <User className="w-4 h-4 text-muted-foreground" />
-              <span className="text-sm text-muted-foreground">{user?.email}</span>
+              <span className="text-sm text-muted-foreground hidden md:inline">{user?.email}</span>
             </div>
             <Button variant="ghost" size="sm" onClick={handleSignOut}>
               <LogOut className="w-4 h-4" />
@@ -114,14 +125,12 @@ export default function Watch() {
       </header>
 
       <main className="container mx-auto px-6 py-12 max-w-5xl">
-        {/* Status badge */}
         <div className="flex items-center gap-2 mb-8">
           <div className="px-3 py-1 rounded-full bg-primary/20 text-primary text-sm font-medium">
             ✓ Lifetime Access Active
           </div>
         </div>
 
-        {/* Video input */}
         <div className="glass-strong rounded-2xl p-6 mb-8">
           <h2 className="font-display text-xl font-semibold mb-4">Paste Dailymotion Video Link</h2>
           <div className="flex gap-4">
@@ -137,12 +146,8 @@ export default function Watch() {
               Watch Ad-Free
             </Button>
           </div>
-          <p className="text-muted-foreground text-sm mt-3">
-            Supported formats: dailymotion.com/video/xxx, dai.ly/xxx, or just the video ID
-          </p>
         </div>
 
-        {/* Video player */}
         {embedUrl ? (
           <div className="glass-strong rounded-2xl p-2 overflow-hidden">
             <div className="relative aspect-video bg-black rounded-xl overflow-hidden">
@@ -168,7 +173,7 @@ export default function Watch() {
             </div>
             <h3 className="font-display text-2xl font-semibold mb-2">Ready to Watch</h3>
             <p className="text-muted-foreground max-w-md mx-auto">
-              Paste any Dailymotion video URL above and enjoy ad-free streaming with fullscreen support.
+              Paste any Dailymotion video URL above and enjoy ad-free streaming.
             </p>
           </div>
         )}
