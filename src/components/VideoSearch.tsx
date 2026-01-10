@@ -98,13 +98,13 @@ export function VideoSearch({ onSelectVideo }: VideoSearchProps) {
 
       {isOpen && results.length > 0 && (
         <>
-          <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)} />
-          <div className="absolute left-0 right-0 top-full mt-2 z-50 glass-strong rounded-xl border border-border/50 shadow-elevated overflow-hidden max-h-[60vh] overflow-y-auto">
+          <div className="fixed inset-0 z-[60]" onClick={() => setIsOpen(false)} />
+          <div className="absolute left-0 right-0 top-full mt-2 z-[70] bg-background/95 backdrop-blur-xl rounded-xl border border-border shadow-2xl overflow-hidden max-h-[50vh] overflow-y-auto">
             {results.map((video) => (
               <button
                 key={video.id}
                 onClick={() => handleSelect(video.id)}
-                className="w-full p-3 hover:bg-secondary/50 transition-colors flex gap-3 text-left border-b border-border/30 last:border-0"
+                className="w-full p-3 hover:bg-secondary/80 transition-colors flex gap-3 text-left border-b border-border/30 last:border-0"
               >
                 <div className="relative shrink-0">
                   <img

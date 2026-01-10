@@ -29,14 +29,9 @@ export default function Watch() {
 
   useEffect(() => {
     if (!loading && user && !hasActiveSubscription && !isAdmin) {
-      toast({
-        title: "Payment Required",
-        description: "Please complete your payment to access the player.",
-        variant: "destructive",
-      });
       navigate("/payment");
     }
-  }, [user, hasActiveSubscription, isAdmin, loading, navigate, toast]);
+  }, [user, hasActiveSubscription, isAdmin, loading, navigate]);
 
   const handleWatch = async (url?: string) => {
     const urlToUse = url || videoUrl;
@@ -201,8 +196,8 @@ export default function Watch() {
           </div>
         </div>
 
-        {/* Video search */}
-        <div className="glass-strong rounded-2xl p-4 sm:p-6 mb-6 sm:mb-8">
+        {/* Video search - with proper z-index stacking */}
+        <div className="relative z-20 glass-strong rounded-2xl p-4 sm:p-6 mb-6 sm:mb-8">
           <h2 className="font-display text-lg sm:text-xl font-semibold mb-4">Search or Paste Video Link</h2>
           <VideoSearch onSelectVideo={handleSelectVideo} />
           <p className="text-muted-foreground text-xs sm:text-sm mt-3">
@@ -210,47 +205,32 @@ export default function Watch() {
           </p>
         </div>
 
-        {/* Video player */}
+        {/* Video player - below search with lower z-index */}
         {embedUrl ? (
-          {/* Video + Search Results Container */}
-<div className="glass-strong rounded-2xl p-1 sm:p-2 overflow-hidden relative">
-  {/* Video player */}
-  <div className="relative aspect-video bg-black rounded-xl overflow-hidden">
-    <iframe
-      id="video-player"
-      src={embedUrl}
-      className="w-full h-full"
-      allow="autoplay; fullscreen"
-      allowFullScreen
-    />
-
-    {/* Bottom controls */}
-    <div className="absolute bottom-4 right-4 flex gap-2 z-10">
-      <button
-        onClick={toggleTvMode}
-        className="p-2 sm:p-3 rounded-lg bg-black/50 hover:bg-black/70 transition-colors"
-      >
-        <Tv className="w-5 h-5 sm:w-6 sm:h-6" />
-      </button>
-      <button
-        onClick={toggleFullscreen}
-        className="p-2 sm:p-3 rounded-lg bg-black/50 hover:bg-black/70 transition-colors"
-      >
-        <Maximize2 className="w-5 h-5 sm:w-6 sm:h-6" />
-      </button>
-    </div>
-  </div>
-
-  {/* Search Results Overlay */}
-  <div className="absolute top-0 left-0 w-full z-20 pointer-events-auto">
-    <VideoSearch
-      onSelectVideo={handleSelectVideo}
-      className="relative z-20"
-      showResultsAboveVideo={true} // optional prop if your VideoSearch supports it
-    />
-  </div>
-</div>
-
+          <div className="relative z-10 glass-strong rounded-2xl p-1 sm:p-2 overflow-hidden">
+            <div className="relative aspect-video bg-black rounded-xl overflow-hidden">
+              <iframe
+                id="video-player"
+                src={embedUrl}
+                className="w-full h-full"
+                allow="autoplay; fullscreen"
+                allowFullScreen
+              />
+              <div className="absolute bottom-4 right-4 flex gap-2">
+                <button
+                  onClick={toggleTvMode}
+                  className="p-2 sm:p-3 rounded-lg bg-black/50 hover:bg-black/70 transition-colors"
+                >
+                  <Tv className="w-5 h-5 sm:w-6 sm:h-6" />
+                </button>
+                <button
+                  onClick={toggleFullscreen}
+                  className="p-2 sm:p-3 rounded-lg bg-black/50 hover:bg-black/70 transition-colors"
+                >
+                  <Maximize2 className="w-5 h-5 sm:w-6 sm:h-6" />
+                </button>
+              </div>
+            </div>
           </div>
         ) : (
           <div className="glass rounded-2xl p-8 sm:p-12 text-center">
