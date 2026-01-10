@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Search, Play, ExternalLink, Loader2 } from 'lucide-react';
+import { Search, Play, Loader2, Link as LinkIcon } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { isValidDailymotionInput, extractVideoId } from '@/lib/dailymotion';
 
 interface VideoSearchProps {
   onSelectVideo: (url: string) => void;
@@ -24,8 +25,53 @@ export function VideoSearch({ onSelectVideo }: VideoSearchProps) {
   const [isOpen, setIsOpen] = useState(false);
   const { toast } = useToast();
 
+  // Detect if input is a Dailymotion URL and auto-play
+  const checkAndPlayUrl = useCallback((input: string) => {
+    const videoId = extractVideoId(input);
+    if (videoId) {
+      // It's a valid Dailymotion URL - play it immediately
+      onSelectVideo(`https://www.dailymotion.com/video/${videoId}`);
+      setQuery('');
+      setResults([]);
+      setIsOpen(false);
+      toast({
+        title: 'Playing video',
+        description: 'Video loaded successfully!',
+      });
+      return true;
+    }
+    return false;
+  }, [onSelectVideo, toast]);
+
+  // Handle paste event
+  const handlePaste = useCallback((e: React.ClipboardEvent<HTMLInputElement>) => {
+    const pastedText = e.clipboardData.getData('text');
+    
+    // Check if pasted content is a Dailymotion URL
+    if (isValidDailymotionInput(pastedText)) {
+      e.preventDefault(); // Prevent the paste from going into input
+      checkAndPlayUrl(pastedText);
+    }
+  }, [checkAndPlayUrl]);
+
+  // Handle input change - check for URL paste via other means
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setQuery(value);
+    
+    // Close search results when typing new query
+    if (results.length > 0 && !isValidDailymotionInput(value)) {
+      // Keep results open only if user is browsing
+    }
+  };
+
   const searchVideos = async () => {
     if (!query.trim()) return;
+    
+    // First check if it's a URL - if so, play it instead of searching
+    if (checkAndPlayUrl(query)) {
+      return;
+    }
     
     setLoading(true);
     setIsOpen(true);
@@ -77,24 +123,51 @@ export function VideoSearch({ onSelectVideo }: VideoSearchProps) {
     setResults([]);
   };
 
+  // Check if current query looks like a URL
+  const isUrlInput = isValidDailymotionInput(query);
+
   return (
     <div className="relative">
       <div className="flex gap-2">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          {isUrlInput ? (
+            <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-primary" />
+          ) : (
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          )}
           <Input
-            placeholder="Search Dailymotion videos..."
+            placeholder="Search videos or paste Dailymotion URL..."
             value={query}
-            onChange={(e) => setQuery(e.target.value)}
+            onChange={handleInputChange}
+            onPaste={handlePaste}
             onKeyDown={(e) => e.key === 'Enter' && searchVideos()}
             onFocus={() => results.length > 0 && setIsOpen(true)}
-            className="pl-10 bg-secondary/50 border-border/50"
+            className={`pl-10 bg-secondary/50 border-border/50 ${isUrlInput ? 'border-primary/50 ring-1 ring-primary/20' : ''}`}
           />
         </div>
-        <Button onClick={searchVideos} disabled={loading} variant="secondary">
-          {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
+        <Button 
+          onClick={searchVideos} 
+          disabled={loading} 
+          variant={isUrlInput ? "default" : "secondary"}
+          className={isUrlInput ? "bg-primary hover:bg-primary/90" : ""}
+        >
+          {loading ? (
+            <Loader2 className="w-4 h-4 animate-spin" />
+          ) : isUrlInput ? (
+            <Play className="w-4 h-4" />
+          ) : (
+            <Search className="w-4 h-4" />
+          )}
         </Button>
       </div>
+
+      {/* URL detected hint */}
+      {isUrlInput && query && (
+        <p className="text-xs text-primary mt-2 flex items-center gap-1">
+          <LinkIcon className="w-3 h-3" />
+          Dailymotion URL detected - press Enter or click Play to watch
+        </p>
+      )}
 
       {isOpen && results.length > 0 && (
         <>
