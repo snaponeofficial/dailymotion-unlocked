@@ -2,10 +2,11 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Palette, Image, Type, Save, RefreshCw } from 'lucide-react';
+import { Palette, Image, Type, Save, RefreshCw, Globe, Share2, Search } from 'lucide-react';
 
 interface BrandingSetting {
   key: string;
@@ -16,9 +17,13 @@ export function BrandingSettings() {
   const [settings, setSettings] = useState({
     site_name: 'DailyWatch',
     site_tagline: 'Ad-Free Dailymotion Experience',
+    site_description: 'Watch Dailymotion videos without ads. Premium ad-free streaming, save favorites, continue watching, and more.',
     site_favicon: '',
     site_logo: '',
     site_primary_color: '#22d3ee',
+    site_og_image: '',
+    site_twitter_handle: '',
+    site_keywords: 'dailymotion, ad-free, video streaming, no ads, watch videos',
   });
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -33,7 +38,7 @@ export function BrandingSettings() {
     const { data, error } = await supabase
       .from('admin_settings')
       .select('*')
-      .in('key', ['site_name', 'site_tagline', 'site_favicon', 'site_logo', 'site_primary_color']);
+      .in('key', Object.keys(settings));
     
     if (data) {
       const settingsMap: Record<string, string> = {};
@@ -63,7 +68,7 @@ export function BrandingSettings() {
     
     toast({
       title: 'Settings Saved',
-      description: 'Branding settings have been updated. Refresh the page to see changes.',
+      description: 'Branding & SEO settings have been updated. Refresh the page to see changes.',
     });
     
     setSaving(false);
@@ -79,6 +84,7 @@ export function BrandingSettings() {
 
   return (
     <div className="space-y-6">
+      {/* Site Identity */}
       <Card className="glass border-border/50">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -99,6 +105,9 @@ export function BrandingSettings() {
               placeholder="DailyWatch"
               className="bg-secondary/50"
             />
+            <p className="text-xs text-muted-foreground">
+              This appears in browser tabs and when sharing links
+            </p>
           </div>
           <div className="space-y-2">
             <Label htmlFor="site_tagline">Tagline</Label>
@@ -113,6 +122,110 @@ export function BrandingSettings() {
         </CardContent>
       </Card>
 
+      {/* SEO Settings */}
+      <Card className="glass border-border/50">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Search className="w-5 h-5 text-primary" />
+            SEO Settings
+          </CardTitle>
+          <CardDescription>
+            Optimize your site for search engines
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="site_description">Meta Description</Label>
+            <Textarea
+              id="site_description"
+              value={settings.site_description}
+              onChange={(e) => setSettings(prev => ({ ...prev, site_description: e.target.value }))}
+              placeholder="A brief description of your site for search engines..."
+              className="bg-secondary/50 min-h-[80px]"
+              maxLength={160}
+            />
+            <p className="text-xs text-muted-foreground">
+              {settings.site_description.length}/160 characters - This appears in search results
+            </p>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="site_keywords">Keywords</Label>
+            <Input
+              id="site_keywords"
+              value={settings.site_keywords}
+              onChange={(e) => setSettings(prev => ({ ...prev, site_keywords: e.target.value }))}
+              placeholder="dailymotion, ad-free, video streaming"
+              className="bg-secondary/50"
+            />
+            <p className="text-xs text-muted-foreground">
+              Comma-separated keywords for search engines
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Social Sharing / Open Graph */}
+      <Card className="glass border-border/50">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Share2 className="w-5 h-5 text-primary" />
+            Social Sharing (Open Graph)
+          </CardTitle>
+          <CardDescription>
+            How your site appears when shared on social media
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="site_og_image">Social Share Image URL</Label>
+            <Input
+              id="site_og_image"
+              value={settings.site_og_image}
+              onChange={(e) => setSettings(prev => ({ ...prev, site_og_image: e.target.value }))}
+              placeholder="https://example.com/og-image.png"
+              className="bg-secondary/50"
+            />
+            <p className="text-xs text-muted-foreground">
+              Recommended: 1200x630px - Shows when sharing on Facebook, Messenger, Discord, etc.
+            </p>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="site_twitter_handle">Twitter/X Handle</Label>
+            <Input
+              id="site_twitter_handle"
+              value={settings.site_twitter_handle}
+              onChange={(e) => setSettings(prev => ({ ...prev, site_twitter_handle: e.target.value }))}
+              placeholder="@yourhandle"
+              className="bg-secondary/50"
+            />
+          </div>
+          
+          {/* Preview */}
+          {(settings.site_og_image || settings.site_name) && (
+            <div className="mt-4 p-4 bg-secondary/30 rounded-lg">
+              <p className="text-xs text-muted-foreground mb-3">Social Share Preview</p>
+              <div className="border border-border/50 rounded-lg overflow-hidden max-w-sm bg-background">
+                {settings.site_og_image && (
+                  <img 
+                    src={settings.site_og_image} 
+                    alt="OG preview" 
+                    className="w-full h-40 object-cover"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).style.display = 'none';
+                    }}
+                  />
+                )}
+                <div className="p-3">
+                  <p className="font-semibold text-sm truncate">{settings.site_name || 'Your Site Name'}</p>
+                  <p className="text-xs text-muted-foreground line-clamp-2">{settings.site_description || 'Your site description...'}</p>
+                </div>
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Logo & Favicon */}
       <Card className="glass border-border/50">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -147,7 +260,7 @@ export function BrandingSettings() {
               className="bg-secondary/50"
             />
             <p className="text-sm text-muted-foreground">
-              Leave empty to use default favicon. Recommended: .ico or .png
+              Shows in browser tabs. Recommended: .ico or .png (32x32px)
             </p>
           </div>
           {(settings.site_logo || settings.site_favicon) && (
@@ -183,6 +296,7 @@ export function BrandingSettings() {
         </CardContent>
       </Card>
 
+      {/* Theme Color */}
       <Card className="glass border-border/50">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -217,7 +331,7 @@ export function BrandingSettings() {
 
       <Button onClick={saveAllSettings} disabled={saving} className="w-full">
         <Save className="w-4 h-4 mr-2" />
-        {saving ? 'Saving...' : 'Save All Branding Settings'}
+        {saving ? 'Saving...' : 'Save All Branding & SEO Settings'}
       </Button>
     </div>
   );
