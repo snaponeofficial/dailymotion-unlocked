@@ -212,15 +212,15 @@ export default function Watch() {
 
         {/* Video player */}
         {embedUrl ? (
-          <div className="glass-strong rounded-2xl p-1 sm:p-2 overflow-hidden">
-            <div className="relative aspect-video bg-black rounded-xl overflow-hidden">
-              <iframe
-                id="video-player"
-                src={embedUrl}
-                className="w-full h-full"
-                allow="autoplay; fullscreen"
-                allowFullScreen
-              />
+<div className="w-full max-w-6xl mx-auto glass-strong rounded-2xl overflow-hidden">
+  <div className="relative pt-[56.25%]"> {/* 16:9 Aspect Ratio */}
+    <iframe
+      id="video-player"
+      src={embedUrl}
+      className="absolute top-0 left-0 w-full h-full rounded-xl"
+      allow="autoplay; fullscreen"
+      allowFullScreen
+    />
               <div className="absolute bottom-4 right-4 flex gap-2">
                 <button
                   onClick={toggleTvMode}
