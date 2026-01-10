@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Play, Maximize2, Minimize2, LogOut, User, Crown, Tv } from "lucide-react";
-import { parseVideoUrl, isValidDailymotionInput } from "@/lib/dailymotion";
+import { Play, Maximize2, Minimize2, LogOut, User, Crown, Tv, Heart, ListPlus, Share2 } from "lucide-react";
+import { parseVideoUrl, isValidDailymotionInput, extractVideoId } from "@/lib/dailymotion";
 import { useAuth } from "@/hooks/useAuth";
 import { signOut } from "@/lib/auth";
 import { useToast } from "@/hooks/use-toast";
@@ -12,11 +12,15 @@ import { VideoFavorites } from "@/components/VideoFavorites";
 import { Watchlist } from "@/components/Watchlist";
 import { VideoSearch } from "@/components/VideoSearch";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { ContinueWatching } from "@/components/ContinueWatching";
 
 export default function Watch() {
   const [videoUrl, setVideoUrl] = useState("");
   const [embedUrl, setEmbedUrl] = useState("");
+  const [currentVideoId, setCurrentVideoId] = useState("");
   const [isTvMode, setIsTvMode] = useState(false);
+  const [isFavorited, setIsFavorited] = useState(false);
+  const [isInWatchlist, setIsInWatchlist] = useState(false);
   const { user, hasActiveSubscription, isAdmin, loading } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -32,6 +36,25 @@ export default function Watch() {
       navigate("/payment");
     }
   }, [user, hasActiveSubscription, isAdmin, loading, navigate]);
+
+  // Check if current video is favorited/in watchlist
+  useEffect(() => {
+    if (user && videoUrl) {
+      checkVideoStatus();
+    }
+  }, [user, videoUrl]);
+
+  const checkVideoStatus = async () => {
+    if (!user || !videoUrl) return;
+    
+    const [favResult, watchlistResult] = await Promise.all([
+      supabase.from('user_favorites').select('id').eq('user_id', user.id).eq('video_url', videoUrl).maybeSingle(),
+      supabase.from('user_watchlist').select('id').eq('user_id', user.id).eq('video_url', videoUrl).maybeSingle()
+    ]);
+    
+    setIsFavorited(!!favResult.data);
+    setIsInWatchlist(!!watchlistResult.data);
+  };
 
   const handleWatch = async (url?: string) => {
     const urlToUse = url || videoUrl;
@@ -49,6 +72,7 @@ export default function Watch() {
     if (video) {
       setVideoUrl(urlToUse);
       setEmbedUrl(video.embedUrl);
+      setCurrentVideoId(video.videoId);
       
       if (user) {
         await supabase.from("video_views").insert({
@@ -63,6 +87,60 @@ export default function Watch() {
   const handleSelectVideo = (url: string) => {
     setVideoUrl(url);
     handleWatch(url);
+  };
+
+  const toggleFavorite = async () => {
+    if (!user || !videoUrl) return;
+
+    if (isFavorited) {
+      await supabase.from('user_favorites').delete().eq('user_id', user.id).eq('video_url', videoUrl);
+      setIsFavorited(false);
+      toast({ title: 'Removed from favorites' });
+    } else {
+      await supabase.from('user_favorites').insert({
+        user_id: user.id,
+        video_url: videoUrl,
+        video_title: currentVideoId,
+      });
+      setIsFavorited(true);
+      toast({ title: 'Added to favorites!' });
+    }
+  };
+
+  const toggleWatchlist = async () => {
+    if (!user || !videoUrl) return;
+
+    if (isInWatchlist) {
+      await supabase.from('user_watchlist').delete().eq('user_id', user.id).eq('video_url', videoUrl);
+      setIsInWatchlist(false);
+      toast({ title: 'Removed from watchlist' });
+    } else {
+      await supabase.from('user_watchlist').insert({
+        user_id: user.id,
+        video_url: videoUrl,
+        video_id: currentVideoId,
+      });
+      setIsInWatchlist(true);
+      toast({ title: 'Added to watchlist!' });
+    }
+  };
+
+  const shareVideo = async () => {
+    if (!videoUrl) return;
+    
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: 'Check out this video!',
+          url: videoUrl,
+        });
+      } catch {
+        // User cancelled or not supported
+      }
+    } else {
+      await navigator.clipboard.writeText(videoUrl);
+      toast({ title: 'Link copied to clipboard!' });
+    }
   };
 
   const toggleFullscreen = () => {
@@ -188,16 +266,19 @@ export default function Watch() {
         </div>
       </header>
 
-      <main className="container mx-auto px-4 sm:px-6 py-6 sm:py-12 max-w-6xl">
+      <main className="container mx-auto px-4 sm:px-6 py-6 sm:py-8 max-w-6xl">
         {/* Status badge */}
-        <div className="flex items-center gap-2 mb-6 sm:mb-8">
+        <div className="flex items-center gap-2 mb-4 sm:mb-6">
           <div className="px-3 py-1 rounded-full bg-primary/20 text-primary text-sm font-medium">
             ✓ Lifetime Access Active
           </div>
         </div>
 
+        {/* Continue Watching Section */}
+        <ContinueWatching onSelectVideo={handleSelectVideo} />
+
         {/* Video search - with proper z-index stacking */}
-        <div className="relative z-20 glass-strong rounded-2xl p-4 sm:p-6 mb-6 sm:mb-8">
+        <div className="relative z-20 glass-strong rounded-2xl p-4 sm:p-6 mb-6">
           <h2 className="font-display text-lg sm:text-xl font-semibold mb-4">Search or Paste Video Link</h2>
           <VideoSearch onSelectVideo={handleSelectVideo} />
           <p className="text-muted-foreground text-xs sm:text-sm mt-3">
@@ -207,29 +288,64 @@ export default function Watch() {
 
         {/* Video player - below search with lower z-index */}
         {embedUrl ? (
-          <div className="relative z-10 glass-strong rounded-2xl p-1 sm:p-2 overflow-hidden">
-            <div className="relative aspect-video bg-black rounded-xl overflow-hidden">
-              <iframe
-                id="video-player"
-                src={embedUrl}
-                className="w-full h-full"
-                allow="autoplay; fullscreen"
-                allowFullScreen
-              />
-              <div className="absolute bottom-4 right-4 flex gap-2">
-                <button
-                  onClick={toggleTvMode}
-                  className="p-2 sm:p-3 rounded-lg bg-black/50 hover:bg-black/70 transition-colors"
-                >
-                  <Tv className="w-5 h-5 sm:w-6 sm:h-6" />
-                </button>
-                <button
-                  onClick={toggleFullscreen}
-                  className="p-2 sm:p-3 rounded-lg bg-black/50 hover:bg-black/70 transition-colors"
-                >
-                  <Maximize2 className="w-5 h-5 sm:w-6 sm:h-6" />
-                </button>
+          <div className="space-y-4">
+            <div className="relative z-10 glass-strong rounded-2xl p-1 sm:p-2 overflow-hidden">
+              <div className="relative aspect-video bg-black rounded-xl overflow-hidden">
+                <iframe
+                  id="video-player"
+                  src={embedUrl}
+                  className="w-full h-full"
+                  allow="autoplay; fullscreen"
+                  allowFullScreen
+                />
+                <div className="absolute bottom-4 right-4 flex gap-2">
+                  <button
+                    onClick={toggleTvMode}
+                    className="p-2 sm:p-3 rounded-lg bg-black/50 hover:bg-black/70 transition-colors"
+                  >
+                    <Tv className="w-5 h-5 sm:w-6 sm:h-6" />
+                  </button>
+                  <button
+                    onClick={toggleFullscreen}
+                    className="p-2 sm:p-3 rounded-lg bg-black/50 hover:bg-black/70 transition-colors"
+                  >
+                    <Maximize2 className="w-5 h-5 sm:w-6 sm:h-6" />
+                  </button>
+                </div>
               </div>
+            </div>
+
+            {/* Action buttons below video */}
+            <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-4 py-2">
+              <Button
+                variant={isFavorited ? "default" : "outline"}
+                size="lg"
+                onClick={toggleFavorite}
+                className={`gap-2 ${isFavorited ? 'bg-red-500 hover:bg-red-600 text-white' : ''}`}
+              >
+                <Heart className={`w-5 h-5 ${isFavorited ? 'fill-current' : ''}`} />
+                {isFavorited ? 'Favorited' : 'Add to Favorites'}
+              </Button>
+              
+              <Button
+                variant={isInWatchlist ? "default" : "outline"}
+                size="lg"
+                onClick={toggleWatchlist}
+                className="gap-2"
+              >
+                <ListPlus className="w-5 h-5" />
+                {isInWatchlist ? 'In My List' : 'Add to My List'}
+              </Button>
+
+              <Button
+                variant="outline"
+                size="lg"
+                onClick={shareVideo}
+                className="gap-2"
+              >
+                <Share2 className="w-5 h-5" />
+                Share
+              </Button>
             </div>
           </div>
         ) : (

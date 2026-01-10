@@ -292,7 +292,10 @@ export type Database = {
       }
       video_views: {
         Row: {
+          completed: boolean | null
+          duration_seconds: number | null
           id: string
+          progress_seconds: number | null
           session_id: string | null
           thumbnail_url: string | null
           user_id: string | null
@@ -302,7 +305,10 @@ export type Database = {
           watched_at: string
         }
         Insert: {
+          completed?: boolean | null
+          duration_seconds?: number | null
           id?: string
+          progress_seconds?: number | null
           session_id?: string | null
           thumbnail_url?: string | null
           user_id?: string | null
@@ -312,7 +318,10 @@ export type Database = {
           watched_at?: string
         }
         Update: {
+          completed?: boolean | null
+          duration_seconds?: number | null
           id?: string
+          progress_seconds?: number | null
           session_id?: string | null
           thumbnail_url?: string | null
           user_id?: string | null
