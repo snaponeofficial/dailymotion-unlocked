@@ -202,16 +202,16 @@ export default function Watch() {
         </div>
 
         {/* Video search */}
-<div
-  className="fixed top-6 left-1/2 transform -translate-x-1/2 w-full max-w-2xl glass-strong rounded-2xl p-4 sm:p-6 z-[9999]"
->
-  <h2 className="font-display text-lg sm:text-xl font-semibold mb-4">
-    Search or Paste Video Link
-  </h2>
-  <VideoSearch onSelectVideo={handleSelectVideo} />
-  <p className="text-muted-foreground text-xs sm:text-sm mt-3">
-    Or paste a Dailymotion URL directly in the search box
-  </p>
+ <div className="absolute top-4 left-1/2 transform -translate-x-1/2 w-full max-w-xl z-20">
+      <h2 className="font-display text-lg sm:text-xl font-semibold mb-2 text-white">
+        Search or Paste Video Link
+      </h2>
+      <VideoSearch onSelectVideo={handleSelectVideo} />
+      <p className="text-muted-foreground text-xs sm:text-sm mt-1 text-white/80">
+        Or paste a Dailymotion URL directly in the search box
+      </p>
+    </div>
+  </div>
 </div>
 
 
